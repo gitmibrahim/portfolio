@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-email-sidebar',
@@ -9,43 +8,39 @@ import { trigger, transition, style, animate } from '@angular/animations';
   template: `
     <div 
       class="fixed right-8 bottom-0 z-40 hidden lg:block"
-      [@fadeIn]="'in'">
+      [style.opacity]="containerOpacity()">
       <div class="flex flex-col items-center">
         <a
           href="mailto:your.email@example.com"
           class="text-slate hover:text-green transition-colors mb-6 font-mono text-sm hover:-translate-y-1"
           [style.writing-mode]="'vertical-rl'"
-          [@emailAnimation]="'in'"
-          [style.animation-delay.ms]="1000">
+          [style.opacity]="emailOpacity()"
+          [style.transform]="emailTransform()">
           your.email@example.com
         </a>
         <div 
           class="h-24 w-px bg-slate"
-          [@lineAnimation]="'in'"
-          [style.animation-delay.ms]="1400">
+          [style.transform]="lineTransform()">
         </div>
       </div>
     </div>
   `,
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('500ms ease-out', style({ opacity: 1 }))
-      ])
-    ]),
-    trigger('emailAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('lineAnimation', [
-      transition(':enter', [
-        style({ transform: 'scaleY(0)' }),
-        animate('500ms ease-out', style({ transform: 'scaleY(1)' }))
-      ])
-    ])
-  ]
 })
-export class EmailSidebarComponent {}
+export class EmailSidebarComponent {
+  // Signal-based animations
+  containerOpacity = signal(0);
+  
+  emailOpacity = signal(0);
+  emailTransform = computed(() => `translateY(${20 * (1 - this.emailOpacity())}px)`);
+
+  lineScale = signal(0);
+  lineTransform = computed(() => `scaleY(${this.lineScale()})`);
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.emailOpacity.set(1);
+      this.lineScale.set(1);
+    }, 1000);
+  }
+}

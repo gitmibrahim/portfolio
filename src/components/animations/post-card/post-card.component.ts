@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, state, style, transition, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-post-card',
@@ -11,12 +10,12 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       <h3 class="text-white font-semibold mb-4 text-center">Post Card</h3>
       <article
         class="bg-navy rounded-lg overflow-hidden cursor-pointer h-full flex flex-col"
-        (mouseenter)="isHovered = true"
-        (mouseleave)="isHovered = false"
-        [@cardHover]="isHovered ? 'hovered' : 'normal'">
+        (mouseenter)="isHovered.set(true)"
+        (mouseleave)="isHovered.set(false)"
+        [style.transform]="cardTransform()">
         <div 
           class="aspect-video bg-gradient-to-br from-purple-500/30 to-pink-500/30"
-          [@imageScale]="isHovered ? 'hovered' : 'normal'"></div>
+          [style.transform]="imageTransform()"></div>
         
         <div class="p-6 flex-1 flex flex-col">
           <div class="flex items-center gap-4 mb-3 text-xs text-slate">
@@ -45,9 +44,9 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
           <a
             href="#"
             class="flex items-center gap-2 text-green font-mono text-sm group"
-            [@linkHover]="isHovered ? 'hovered' : 'normal'">
+            [style.transform]="linkTransform()">
             Read More
-            <span [@arrowMove]="isHovered ? 'hovered' : 'normal'">
+            <span [style.transform]="arrowTransform()">
               →
             </span>
           </a>
@@ -55,29 +54,28 @@ import { trigger, state, style, transition, animate } from '@angular/animations'
       </article>
     </div>
   `,
-  animations: [
-    trigger('cardHover', [
-      state('normal', style({ transform: 'translateY(0)' })),
-      state('hovered', style({ transform: 'translateY(-5px)' })),
-      transition('normal <=> hovered', [animate('300ms ease-in-out')])
-    ]),
-    trigger('imageScale', [
-      state('normal', style({ transform: 'scale(1)' })),
-      state('hovered', style({ transform: 'scale(1.05)' })),
-      transition('normal <=> hovered', [animate('300ms ease-in-out')])
-    ]),
-    trigger('linkHover', [
-      state('normal', style({ transform: 'translateX(0)' })),
-      state('hovered', style({ transform: 'translateX(5px)' })),
-      transition('normal <=> hovered', [animate('200ms ease-in-out')])
-    ]),
-    trigger('arrowMove', [
-      state('normal', style({ transform: 'translateX(0)' })),
-      state('hovered', style({ transform: 'translateX(5px)' })),
-      transition('normal <=> hovered', [animate('200ms ease-in-out')])
-    ])
-  ]
 })
 export class PostCardComponent {
-  isHovered = false;
+  isHovered = signal(false);
+
+  // Signal-based animations
+  cardTransform = computed(() => {
+    const y = this.isHovered() ? -5 : 0;
+    return `translateY(${y}px)`;
+  });
+
+  imageTransform = computed(() => {
+    const scale = this.isHovered() ? 1.05 : 1;
+    return `scale(${scale})`;
+  });
+
+  linkTransform = computed(() => {
+    const x = this.isHovered() ? 5 : 0;
+    return `translateX(${x}px)`;
+  });
+
+  arrowTransform = computed(() => {
+    const x = this.isHovered() ? 5 : 0;
+    return `translateX(${x}px)`;
+  });
 }

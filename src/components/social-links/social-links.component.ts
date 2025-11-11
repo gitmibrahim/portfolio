@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-social-links',
@@ -9,12 +8,12 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
   template: `
     <div 
       class="fixed left-8 bottom-0 z-40 hidden lg:block"
-      [@fadeIn]="'in'">
+      [style.opacity]="containerOpacity()">
       <ul class="flex flex-col items-center space-y-6">
         <li 
           *ngFor="let link of socialLinks; let i = index"
-          [@socialItemAnimation]="'in'"
-          [style.animation-delay.ms]="1000 + i * 100">
+          [style.opacity]="linkOpacity(i)()"
+          [style.transform]="linkTransform(i)()">
           <a
             [href]="link.url"
             target="_blank"
@@ -28,32 +27,11 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
         </li>
         <div 
           class="h-24 w-px bg-slate"
-          [@lineAnimation]="'in'"
-          [style.animation-delay.ms]="1400">
+          [style.transform]="lineTransform()">
         </div>
       </ul>
     </div>
   `,
-  animations: [
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('500ms ease-out', style({ opacity: 1 }))
-      ])
-    ]),
-    trigger('socialItemAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('lineAnimation', [
-      transition(':enter', [
-        style({ transform: 'scaleY(0)' }),
-        animate('500ms ease-out', style({ transform: 'scaleY(1)' }))
-      ])
-    ])
-  ]
 })
 export class SocialLinksComponent {
   socialLinks = [
@@ -78,4 +56,29 @@ export class SocialLinksComponent {
       iconPath: 'M24 8.182l-.018-.087-.017-.05c-.01-.024-.01-.05-.02-.075l-.03-.08c-.01-.025-.02-.05-.03-.075l-.03-.06-.04-.07c-.01-.02-.02-.04-.03-.06l-.04-.05-.05-.06-.05-.04-.05-.05-.06-.04-.06-.04-.05-.03c-.07-.04-.14-.08-.22-.12l-.07-.03-.08-.04-.08-.02-.09-.03h-.08l-.1-.02H23.5l-.1.01-.08.02-.08.02-.08.03-.07.02-.08.04-.06.03c-.08.04-.15.08-.22.12l-.05.03-.06.04-.05.04-.05.05-.05.06-.04.05-.03.06-.03.06-.03.075-.03.08c-.01.025-.02.05-.02.075l-.02.075-.017.05-.018.087V15.818l.018.087.017.05c.01.024.01.05.02.075l.03.08c.01.025.02.05.03.075l.03.06.03.07.03.06.04.05.05.06.05.04.05.05.06.04.06.04.05.03c.07.04.14.08.22.12l.07.03.08.04.08.02.08.03.1.02h.1l.08-.01.1-.02.08-.02.08-.03.07-.02.08-.04.06-.03c.08-.04.15-.08.22-.12l.05-.03.06-.04.05-.04.05-.05.05-.06.04-.05.03-.06.03-.06.03-.075.03-.08c.01-.025.02-.05.02-.075l.02-.075.017-.05.018-.087V8.182zm-8 3.75l-3.214-2.182L16 7.568v8.864l-3.214-2.182L16 11.932zm-5.786-2.182L7 11.932v3.636l3.214-2.182L7 9.75zm-1.214 0L2.572 7.568v8.864L5.786 14.25l-3.214-2.182V9.75zm8.428 0L11 7.568v8.864l3.214-2.182L11 9.75z'
     }
   ];
+
+  // Signal-based animations
+  containerOpacity = signal(0);
+  
+  linkOpacity = (index: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), 1000 + index * 100);
+    return opacity;
+  };
+
+  linkTransform = (index: number) => {
+    const transform = signal('translateY(20px)');
+    setTimeout(() => transform.set('translateY(0)'), 1000 + index * 100);
+    return transform;
+  };
+
+  lineScale = signal(0);
+  lineTransform = computed(() => `scaleY(${this.lineScale()})`);
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.lineScale.set(1);
+    }, 1000);
+  }
 }

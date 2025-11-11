@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 interface Experience {
   company: string;
@@ -18,10 +17,11 @@ interface Experience {
   template: `
     <section id="experience" class="min-h-screen flex items-center py-20 px-6 sm:px-8">
       <div class="max-w-4xl mx-auto w-full">
-        <div [@fadeInUp]="'in'">
+        <div [style.opacity]="containerOpacity()" [style.transform]="containerTransform()">
           <h2 
             class="text-2xl sm:text-3xl font-bold text-white mb-12 flex items-center"
-            [@slideInLeft]="'in'">
+            [style.opacity]="titleOpacity()"
+            [style.transform]="titleTransform()">
             <span class="text-green font-mono text-lg mr-4">02.</span>
             Where I've Worked
           </h2>
@@ -30,18 +30,17 @@ interface Experience {
             <!-- Timeline line -->
             <div class="absolute left-8 top-0 bottom-0 w-0.5 bg-lightest-navy"></div>
             
-            <div class="space-y-12" [@timelineAnimation]="'in'">
+            <div class="space-y-12">
               <div 
                 *ngFor="let exp of experiences; let i = index"
                 class="relative pl-20"
-                [@timelineItemAnimation]="'in'"
-                [style.animation-delay.ms]="i * 200">
+                [style.opacity]="experienceOpacity(i)()"
+                [style.transform]="experienceTransform(i)()">
                 <!-- Timeline dot -->
                 <div class="absolute left-6 top-2 w-4 h-4 bg-green rounded-full border-4 border-navy"></div>
                 
                 <div 
-                  class="bg-light-navy/50 rounded-lg p-6 hover:bg-light-navy transition-colors hover:scale-105"
-                  [@cardHover]="'in'">
+                  class="bg-light-navy/50 rounded-lg p-6 hover:bg-light-navy transition-colors hover:scale-105">
                   <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
                     <h3 class="text-white font-semibold text-lg">
                       {{ exp.position }}
@@ -53,12 +52,12 @@ interface Experience {
                   <p class="text-green text-sm font-mono mb-4">
                     {{ exp.company }} · {{ exp.location }}
                   </p>
-                  <ul class="space-y-2" [@listAnimation]="'in'">
+                  <ul class="space-y-2">
                     <li 
                       *ngFor="let item of exp.description; let j = index"
                       class="text-slate text-sm flex items-start"
-                      [@listItemAnimation]="'in'"
-                      [style.animation-delay.ms]="j * 100">
+                      [style.opacity]="descriptionItemOpacity(i, j)()"
+                      [style.transform]="descriptionItemTransform(i, j)()">
                       <span class="text-green mr-2">▹</span>
                       {{ item }}
                     </li>
@@ -71,58 +70,6 @@ interface Experience {
       </div>
     </section>
   `,
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(50px)' }),
-        animate('600ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('slideInLeft', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ]),
-    trigger('timelineAnimation', [
-      transition(':enter', [
-        query('div', [
-          stagger(200, [
-            style({ opacity: 0, transform: 'translateX(-50px)' }),
-            animate('500ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ])
-      ])
-    ]),
-    trigger('timelineItemAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-50px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ]),
-    trigger('cardHover', [
-      transition(':enter', [
-        style({ transform: 'scale(1)' }),
-        animate('300ms ease-out')
-      ])
-    ]),
-    trigger('listAnimation', [
-      transition(':enter', [
-        query('li', [
-          stagger(100, [
-            style({ opacity: 0, transform: 'translateY(10px)' }),
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ])
-      ])
-    ]),
-    trigger('listItemAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ]
 })
 export class ExperienceComponent {
   experiences: Experience[] = [
@@ -155,6 +102,44 @@ export class ExperienceComponent {
       ],
     },
   ];
+
+  // Signal-based animations
+  containerOpacity = signal(0);
+  containerTransform = computed(() => `translateY(${50 * (1 - this.containerOpacity())}px)`);
+
+  titleOpacity = signal(0);
+  titleTransform = computed(() => `translateX(${-20 * (1 - this.titleOpacity())}px)`);
+
+  experienceOpacity = (index: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), index * 200);
+    return opacity;
+  };
+
+  experienceTransform = (index: number) => {
+    const transform = signal('translateX(-50px)');
+    setTimeout(() => transform.set('translateX(0)'), index * 200);
+    return transform;
+  };
+
+  descriptionItemOpacity = (expIndex: number, itemIndex: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), expIndex * 200 + itemIndex * 100);
+    return opacity;
+  };
+
+  descriptionItemTransform = (expIndex: number, itemIndex: number) => {
+    const transform = signal('translateY(10px)');
+    setTimeout(() => transform.set('translateY(0)'), expIndex * 200 + itemIndex * 100);
+    return transform;
+  };
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.titleOpacity.set(1);
+    }, 0);
+  }
 
   formatDate(dateString: string): string {
     const date = new Date(dateString + '-01');

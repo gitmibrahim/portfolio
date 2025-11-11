@@ -13,16 +13,17 @@ A modern, animated portfolio website built with Angular 17, TypeScript, Tailwind
 - ♿ Accessible and SEO-friendly
 - ⚡ Optimized performance with Angular's change detection
 
-## Angular Animations Features
+## Angular Signal-Based Animations
 
-This portfolio leverages Angular's powerful animation system:
+This portfolio leverages Angular 18+ signal-based animations for reactive, performant animations:
 
-- **State-based animations** for hover effects and interactions
-- **Stagger animations** for list items and grid layouts
-- **Keyframe animations** for complex motion sequences
-- **Query animations** for animating child elements
-- **Transition animations** for smooth state changes
-- **Performance-optimized** animations using Angular's animation engine
+- **Signal-based reactive animations** using Angular signals for state management
+- **Computed animations** that automatically update when signal values change
+- **Staggered animations** using signals with setTimeout for sequential effects
+- **Hover and interaction animations** driven by signal state changes
+- **Performance-optimized** using Angular's change detection with signals
+- **Type-safe animations** with full TypeScript support
+- **Reactive updates** - animations automatically respond to signal changes
 
 ## Getting Started
 
@@ -78,24 +79,26 @@ The portfolio includes an animations showcase section featuring Angular animatio
 - **Button Animations**: Hover, ripple, gradient, and border fill animations
 - **Loading Animations**: Spinner rotation, bouncing dots, pulse, and progress bar animations
 
-All animations use Angular's `@angular/animations` API for optimal performance and smooth transitions.
+All animations use Angular 18+ signal-based animations for reactive, performant, and smooth transitions.
 
 ## Tech Stack
 
-- **Framework**: Angular 17
+- **Framework**: Angular 18
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
-- **Animations**: Angular Animations API (@angular/animations)
+- **Animations**: Signal-based animations with Angular signals
 - **Architecture**: Standalone Components
 - **Build Tool**: Angular CLI
 
-## Angular Animations Advantages
+## Signal-Based Animations Advantages
 
-- **Performance**: Leverages Web Animations API for hardware-accelerated animations
-- **Type Safety**: Full TypeScript support for animation definitions
-- **Declarative**: Define animations declaratively in component metadata
-- **Reusable**: Create reusable animation triggers
-- **Testable**: Easy to test animations in Angular's testing framework
+- **Reactive**: Animations automatically update when signal values change
+- **Performance**: Signals provide fine-grained reactivity, only updating what's needed
+- **Type Safety**: Full TypeScript support with signal types
+- **Declarative**: Define animations using computed signals and reactive patterns
+- **Simple State Management**: Use signals for animation state instead of complex trigger definitions
+- **Better DX**: Easier to reason about and debug animation state
+- **Integration**: Seamlessly works with Angular's signal-based reactivity system
 
 ## License
 

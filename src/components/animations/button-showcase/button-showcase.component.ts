@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, state, style, transition, animate, keyframes } from '@angular/animations';
 
 @Component({
   selector: 'app-button-showcase',
@@ -13,9 +12,10 @@ import { trigger, state, style, transition, animate, keyframes } from '@angular/
         <!-- Hover Button -->
         <button
           class="w-full bg-green text-navy font-semibold py-3 rounded"
-          (mouseenter)="hoverState = 'hovered'"
-          (mouseleave)="hoverState = 'normal'"
-          [@hoverButton]="hoverState">
+          (mouseenter)="hoverState.set('hovered')"
+          (mouseleave)="hoverState.set('normal')"
+          [style.transform]="hoverButtonTransform()"
+          [style.box-shadow]="hoverButtonShadow()">
           Hover Me
         </button>
 
@@ -23,95 +23,123 @@ import { trigger, state, style, transition, animate, keyframes } from '@angular/
         <button
           class="w-full bg-lightest-navy text-white font-semibold py-3 rounded relative overflow-hidden"
           (click)="triggerRipple()"
-          [@rippleButton]="rippleState">
+          [style.transform]="rippleButtonTransform()">
           <span class="relative z-10">Click for Ripple</span>
           <span 
-            *ngIf="showRipple"
+            *ngIf="showRipple()"
             class="absolute inset-0 bg-green/30 rounded-full"
-            [@ripple]="'active'">
+            [style.transform]="rippleTransform()"
+            [style.opacity]="rippleOpacity()">
           </span>
         </button>
 
         <!-- Gradient Button -->
         <button
           class="w-full bg-gradient-to-r from-green to-blue-500 text-white font-semibold py-3 rounded"
-          (mouseenter)="gradientState = 'hovered'"
-          (mouseleave)="gradientState = 'normal'"
-          [@gradientButton]="gradientState">
+          (mouseenter)="gradientState.set('hovered')"
+          (mouseleave)="gradientState.set('normal')"
+          [style.transform]="gradientButtonTransform()">
           Gradient Button
         </button>
 
         <!-- Border Animation Button -->
         <button
           class="w-full border-2 border-green text-green font-semibold py-3 rounded relative overflow-hidden"
-          (mouseenter)="borderState = 'hovered'"
-          (mouseleave)="borderState = 'normal'"
-          [@borderButton]="borderState">
+          (mouseenter)="borderState.set('hovered')"
+          (mouseleave)="borderState.set('normal')"
+          [style.transform]="borderButtonTransform()">
           <span 
             class="absolute inset-0 bg-green-tint"
-            [@borderFill]="borderState">
+            [style.transform]="borderFillTransform()">
           </span>
           <span class="relative z-10">Border Animation</span>
         </button>
       </div>
     </div>
   `,
-  animations: [
-    trigger('hoverButton', [
-      state('normal', style({ transform: 'scale(1)', boxShadow: 'none' })),
-      state('hovered', style({ 
-        transform: 'scale(1.05)', 
-        boxShadow: '0 10px 30px rgba(100, 255, 218, 0.3)' 
-      })),
-      transition('normal <=> hovered', [animate('200ms ease-in-out')])
-    ]),
-    trigger('rippleButton', [
-      state('normal', style({ transform: 'scale(1)' })),
-      state('clicked', style({ transform: 'scale(0.98)' })),
-      transition('normal => clicked', [
-        animate('100ms ease-out', style({ transform: 'scale(0.98)' })),
-        animate('100ms ease-out', style({ transform: 'scale(1)' }))
-      ])
-    ]),
-    trigger('ripple', [
-      transition(':enter', [
-        animate('600ms ease-out', keyframes([
-          style({ transform: 'scale(0)', opacity: 1, offset: 0 }),
-          style({ transform: 'scale(4)', opacity: 0, offset: 1 })
-        ]))
-      ])
-    ]),
-    trigger('gradientButton', [
-      state('normal', style({ transform: 'scale(1)' })),
-      state('hovered', style({ transform: 'scale(1.05)' })),
-      transition('normal <=> hovered', [animate('200ms ease-in-out')])
-    ]),
-    trigger('borderButton', [
-      state('normal', style({ transform: 'scale(1)' })),
-      state('hovered', style({ transform: 'scale(1.05)' })),
-      transition('normal <=> hovered', [animate('200ms ease-in-out')])
-    ]),
-    trigger('borderFill', [
-      state('normal', style({ transform: 'translateX(-100%)' })),
-      state('hovered', style({ transform: 'translateX(0)' })),
-      transition('normal => hovered', [animate('300ms ease-in-out')]),
-      transition('hovered => normal', [animate('300ms ease-in-out')])
-    ])
-  ]
 })
-export class ButtonShowcaseComponent {
-  hoverState = 'normal';
-  rippleState = 'normal';
-  showRipple = false;
-  gradientState = 'normal';
-  borderState = 'normal';
+export class ButtonShowcaseComponent implements OnDestroy {
+  hoverState = signal<'normal' | 'hovered'>('normal');
+  rippleState = signal<'normal' | 'clicked'>('normal');
+  showRipple = signal(false);
+  rippleScale = signal(0);
+  rippleOpacity = signal(1);
+  gradientState = signal<'normal' | 'hovered'>('normal');
+  borderState = signal<'normal' | 'hovered'>('normal');
+  borderFillX = signal(-100);
+
+  // Signal-based animations
+  hoverButtonTransform = computed(() => {
+    const scale = this.hoverState() === 'hovered' ? 1.05 : 1;
+    return `scale(${scale})`;
+  });
+
+  hoverButtonShadow = computed(() => {
+    return this.hoverState() === 'hovered' 
+      ? '0 10px 30px rgba(100, 255, 218, 0.3)' 
+      : 'none';
+  });
+
+  rippleButtonTransform = computed(() => {
+    if (this.rippleState() === 'clicked') {
+      return 'scale(0.98)';
+    }
+    return 'scale(1)';
+  });
+
+  rippleTransform = computed(() => `scale(${this.rippleScale()})`);
+
+  gradientButtonTransform = computed(() => {
+    const scale = this.gradientState() === 'hovered' ? 1.05 : 1;
+    return `scale(${scale})`;
+  });
+
+  borderButtonTransform = computed(() => {
+    const scale = this.borderState() === 'hovered' ? 1.05 : 1;
+    return `scale(${scale})`;
+  });
+
+  borderFillTransform = computed(() => `translateX(${this.borderFillX()}%)`);
 
   triggerRipple() {
-    this.rippleState = 'clicked';
-    this.showRipple = true;
+    this.rippleState.set('clicked');
+    this.showRipple.set(true);
+    this.rippleScale.set(0);
+    this.rippleOpacity.set(1);
+
+    // Animate ripple
     setTimeout(() => {
-      this.rippleState = 'normal';
-      this.showRipple = false;
+      this.rippleScale.set(4);
+      this.rippleOpacity.set(0);
+    }, 10);
+
+    setTimeout(() => {
+      this.rippleState.set('normal');
+      this.showRipple.set(false);
+      this.rippleScale.set(0);
+      this.rippleOpacity.set(1);
     }, 600);
+  }
+
+  private borderFillInterval?: number;
+
+  constructor() {
+    // Watch border state for fill animation using requestAnimationFrame
+    const animateBorderFill = () => {
+      if (this.borderState() === 'hovered' && this.borderFillX() < 0) {
+        this.borderFillX.update(x => Math.min(0, x + 5));
+        this.borderFillInterval = window.requestAnimationFrame(animateBorderFill);
+      } else if (this.borderState() === 'normal' && this.borderFillX() > -100) {
+        this.borderFillX.update(x => Math.max(-100, x - 5));
+        this.borderFillInterval = window.requestAnimationFrame(animateBorderFill);
+      }
+    };
+    this.borderFillInterval = window.requestAnimationFrame(animateBorderFill);
+  }
+
+  ngOnDestroy() {
+    if (this.borderFillInterval) {
+      window.cancelAnimationFrame(this.borderFillInterval);
+    }
   }
 }

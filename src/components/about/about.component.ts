@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 @Component({
   selector: 'app-about',
@@ -11,19 +10,20 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       <div class="max-w-4xl mx-auto">
         <div 
           class="grid md:grid-cols-[3fr_2fr] gap-12 items-center"
-          [@fadeInUp]="'in'">
+          [style.opacity]="containerOpacity()"
+          [style.transform]="containerTransform()">
           <div>
             <h2 
               class="text-2xl sm:text-3xl font-bold text-white mb-6 flex items-center"
-              [@slideInLeft]="'in'">
+              [style.opacity]="titleOpacity()"
+              [style.transform]="titleTransform()">
               <span class="text-green font-mono text-lg mr-4">01.</span>
               About Me
             </h2>
             
             <div 
               class="text-slate space-y-4"
-              [@fadeIn]="'in'"
-              [style.animation-delay.ms]="200">
+              [style.opacity]="contentOpacity()">
               <p>
                 Hello! I'm a passionate frontend developer with 3+ years of experience building 
                 modern web applications. I specialize in creating pixel-perfect, interactive, and 
@@ -39,13 +39,12 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
               </p>
               
               <ul 
-                class="grid grid-cols-2 gap-2 mt-4 font-mono text-sm"
-                [@listAnimation]="'in'">
+                class="grid grid-cols-2 gap-2 mt-4 font-mono text-sm">
                 <li 
                   *ngFor="let tech of technologies; let i = index"
                   class="text-slate before:content-['▹'] before:text-green before:mr-2"
-                  [@listItemAnimation]="'in'"
-                  [style.animation-delay.ms]="300 + i * 50">
+                  [style.opacity]="techItemOpacity(i)()"
+                  [style.transform]="techItemTransform(i)()">
                   {{ tech }}
                 </li>
               </ul>
@@ -54,8 +53,8 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
           
           <div 
             class="relative"
-            [@scaleIn]="'in'"
-            [style.animation-delay.ms]="300">
+            [style.opacity]="imageOpacity()"
+            [style.transform]="imageTransform()">
             <div class="relative w-full max-w-sm mx-auto">
               <div class="absolute inset-0 border-2 border-green rounded-lg transform rotate-6 hover:rotate-3 transition-transform duration-300"></div>
               <div class="relative bg-light-navy rounded-lg p-4">
@@ -67,48 +66,6 @@ import { trigger, transition, style, animate, query, stagger } from '@angular/an
       </div>
     </section>
   `,
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(50px)' }),
-        animate('600ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('slideInLeft', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ]),
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('500ms ease-out', style({ opacity: 1 }))
-      ])
-    ]),
-    trigger('listAnimation', [
-      transition(':enter', [
-        query('li', [
-          stagger(50, [
-            style({ opacity: 0, transform: 'translateX(-10px)' }),
-            animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-          ])
-        ])
-      ])
-    ]),
-    trigger('listItemAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ]),
-    trigger('scaleIn', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.9)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
-      ])
-    ])
-  ]
 })
 export class AboutComponent {
   technologies = [
@@ -121,4 +78,40 @@ export class AboutComponent {
     'Tailwind CSS',
     'SASS'
   ];
+
+  // Signal-based animations
+  containerOpacity = signal(0);
+  containerTransform = computed(() => `translateY(${50 * (1 - this.containerOpacity())}px)`);
+
+  titleOpacity = signal(0);
+  titleTransform = computed(() => `translateX(${-20 * (1 - this.titleOpacity())}px)`);
+
+  contentOpacity = signal(0);
+  
+  imageOpacity = signal(0);
+  imageTransform = computed(() => {
+    const scale = 0.9 + (this.imageOpacity() * 0.1);
+    return `scale(${scale})`;
+  });
+
+  techItemOpacity = (index: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), 300 + index * 50);
+    return opacity;
+  };
+
+  techItemTransform = (index: number) => {
+    const transform = signal('translateX(-10px)');
+    setTimeout(() => transform.set('translateX(0)'), 300 + index * 50);
+    return transform;
+  };
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.titleOpacity.set(1);
+      this.contentOpacity.set(1);
+      this.imageOpacity.set(1);
+    }, 0);
+  }
 }

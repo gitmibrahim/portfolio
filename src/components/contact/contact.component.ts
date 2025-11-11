@@ -1,7 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { trigger, transition, style, animate } from '@angular/animations';
 
 @Component({
   selector: 'app-contact',
@@ -12,24 +11,25 @@ import { trigger, transition, style, animate } from '@angular/animations';
       <div class="max-w-4xl mx-auto w-full">
         <div 
           class="text-center"
-          [@fadeInUp]="'in'">
+          [style.opacity]="containerOpacity()"
+          [style.transform]="containerTransform()">
           <p 
             class="text-green font-mono text-sm mb-4"
-            [@fadeIn]="'in'">
+            [style.opacity]="subtitleOpacity()">
             06. What's Next?
           </p>
           
           <h2 
             class="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-4"
-            [@fadeInUp]="'in'"
-            [style.animation-delay.ms]="100">
+            [style.opacity]="titleOpacity()"
+            [style.transform]="titleTransform()">
             Get In Touch
           </h2>
           
           <p 
             class="text-slate mb-12 max-w-2xl mx-auto"
-            [@fadeInUp]="'in'"
-            [style.animation-delay.ms]="200">
+            [style.opacity]="descriptionOpacity()"
+            [style.transform]="descriptionTransform()">
             I'm currently looking for new opportunities. Whether you have a question or just want to say hi, 
             I'll try my best to get back to you!
           </p>
@@ -37,8 +37,8 @@ import { trigger, transition, style, animate } from '@angular/animations';
           <form
             (ngSubmit)="handleSubmit($event)"
             class="max-w-lg mx-auto space-y-6"
-            [@formAnimation]="'in'"
-            [style.animation-delay.ms]="300">
+            [style.opacity]="formOpacity()"
+            [style.transform]="formTransform()">
             <div>
               <input
                 type="text"
@@ -47,7 +47,8 @@ import { trigger, transition, style, animate } from '@angular/animations';
                 name="name"
                 required
                 class="w-full bg-light-navy border border-slate rounded px-4 py-3 text-white placeholder-slate focus:outline-none focus:border-green transition-colors"
-                [@inputAnimation]="'in'">
+                [style.opacity]="inputOpacity(0)()"
+                [style.transform]="inputTransform(0)()">
             </div>
             <div>
               <input
@@ -57,8 +58,8 @@ import { trigger, transition, style, animate } from '@angular/animations';
                 name="email"
                 required
                 class="w-full bg-light-navy border border-slate rounded px-4 py-3 text-white placeholder-slate focus:outline-none focus:border-green transition-colors"
-                [@inputAnimation]="'in'"
-                [style.animation-delay.ms]="50">
+                [style.opacity]="inputOpacity(1)()"
+                [style.transform]="inputTransform(1)()">
             </div>
             <div>
               <textarea
@@ -68,23 +69,22 @@ import { trigger, transition, style, animate } from '@angular/animations';
                 rows="6"
                 required
                 class="w-full bg-light-navy border border-slate rounded px-4 py-3 text-white placeholder-slate focus:outline-none focus:border-green transition-colors resize-none"
-                [@inputAnimation]="'in'"
-                [style.animation-delay.ms]="100">
+                [style.opacity]="inputOpacity(2)()"
+                [style.transform]="inputTransform(2)()">
               </textarea>
             </div>
             <button
               type="submit"
               class="border border-green text-green px-8 py-3 rounded font-mono text-sm hover:bg-green-tint transition-colors hover:scale-105"
-              [@buttonAnimation]="'in'"
-              [style.animation-delay.ms]="150">
+              [style.opacity]="buttonOpacity()"
+              [style.transform]="buttonTransform()">
               Send Message
             </button>
           </form>
 
           <div 
             class="mt-16"
-            [@fadeIn]="'in'"
-            [style.animation-delay.ms]="500">
+            [style.opacity]="emailOpacity()">
             <a
               href="mailto:your.email@example.com"
               class="text-green font-mono text-sm hover:underline inline-flex items-center gap-2 hover:-translate-y-1 transition-transform">
@@ -98,38 +98,6 @@ import { trigger, transition, style, animate } from '@angular/animations';
       </div>
     </section>
   `,
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('fadeIn', [
-      transition(':enter', [
-        style({ opacity: 0 }),
-        animate('500ms ease-out', style({ opacity: 1 }))
-      ])
-    ]),
-    trigger('formAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('inputAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(10px)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('buttonAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'scale(0.8)' }),
-        animate('300ms ease-out', style({ opacity: 1, transform: 'scale(1)' }))
-      ])
-    ])
-  ]
 })
 export class ContactComponent {
   formData = {
@@ -137,6 +105,53 @@ export class ContactComponent {
     email: '',
     message: ''
   };
+
+  // Signal-based animations
+  containerOpacity = signal(0);
+  containerTransform = computed(() => `translateY(${50 * (1 - this.containerOpacity())}px)`);
+
+  subtitleOpacity = signal(0);
+  
+  titleOpacity = signal(0);
+  titleTransform = computed(() => `translateY(${20 * (1 - this.titleOpacity())}px)`);
+
+  descriptionOpacity = signal(0);
+  descriptionTransform = computed(() => `translateY(${20 * (1 - this.descriptionOpacity())}px)`);
+
+  formOpacity = signal(0);
+  formTransform = computed(() => `translateY(${20 * (1 - this.formOpacity())}px)`);
+
+  inputOpacity = (index: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), 300 + index * 50);
+    return opacity;
+  };
+
+  inputTransform = (index: number) => {
+    const transform = signal('translateY(10px)');
+    setTimeout(() => transform.set('translateY(0)'), 300 + index * 50);
+    return transform;
+  };
+
+  buttonOpacity = signal(0);
+  buttonTransform = computed(() => {
+    const scale = 0.8 + (this.buttonOpacity() * 0.2);
+    return `scale(${scale})`;
+  });
+
+  emailOpacity = signal(0);
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.subtitleOpacity.set(1);
+      this.titleOpacity.set(1);
+      this.descriptionOpacity.set(1);
+      this.formOpacity.set(1);
+      this.buttonOpacity.set(1);
+      this.emailOpacity.set(1);
+    }, 0);
+  }
 
   handleSubmit(event: Event) {
     event.preventDefault();

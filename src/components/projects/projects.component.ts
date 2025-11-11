@@ -1,6 +1,5 @@
-import { Component } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { trigger, transition, style, animate, query, stagger } from '@angular/animations';
 
 interface Project {
   title: string;
@@ -17,21 +16,20 @@ interface Project {
   template: `
     <section id="projects" class="min-h-screen flex items-center py-20 px-6 sm:px-8">
       <div class="max-w-6xl mx-auto w-full">
-        <div [@fadeInUp]="'in'">
+        <div [style.opacity]="containerOpacity()" [style.transform]="containerTransform()">
           <h2 
             class="text-2xl sm:text-3xl font-bold text-white mb-4 flex items-center"
-            [@slideInLeft]="'in'">
+            [style.opacity]="titleOpacity()"
+            [style.transform]="titleTransform()">
             <span class="text-green font-mono text-lg mr-4">03.</span>
             Some Things I've Built
           </h2>
 
-          <div 
-            class="space-y-24 mt-16"
-            [@projectsAnimation]="'in'">
+          <div class="space-y-24 mt-16">
             <div 
               *ngFor="let project of projects; let i = index"
-              [@projectAnimation]="'in'"
-              [style.animation-delay.ms]="i * 200"
+              [style.opacity]="projectOpacity(i)()"
+              [style.transform]="projectTransform(i)()"
               class="grid md:grid-cols-2 gap-8 items-center"
               [ngClass]="{'md:flex-row-reverse': i % 2 === 1}">
               <div 
@@ -87,36 +85,6 @@ interface Project {
       </div>
     </section>
   `,
-  animations: [
-    trigger('fadeInUp', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(50px)' }),
-        animate('600ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ]),
-    trigger('slideInLeft', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateX(-20px)' }),
-        animate('500ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-      ])
-    ]),
-    trigger('projectsAnimation', [
-      transition(':enter', [
-        query('div', [
-          stagger(200, [
-            style({ opacity: 0, transform: 'translateY(50px)' }),
-            animate('600ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-          ])
-        ])
-      ])
-    ]),
-    trigger('projectAnimation', [
-      transition(':enter', [
-        style({ opacity: 0, transform: 'translateY(50px)' }),
-        animate('600ms ease-out', style({ opacity: 1, transform: 'translateY(0)' }))
-      ])
-    ])
-  ]
 })
 export class ProjectsComponent {
   projects: Project[] = [
@@ -142,4 +110,30 @@ export class ProjectsComponent {
       live: 'https://example.com',
     },
   ];
+
+  // Signal-based animations
+  containerOpacity = signal(0);
+  containerTransform = computed(() => `translateY(${50 * (1 - this.containerOpacity())}px)`);
+
+  titleOpacity = signal(0);
+  titleTransform = computed(() => `translateX(${-20 * (1 - this.titleOpacity())}px)`);
+
+  projectOpacity = (index: number) => {
+    const opacity = signal(0);
+    setTimeout(() => opacity.set(1), index * 200);
+    return opacity;
+  };
+
+  projectTransform = (index: number) => {
+    const transform = signal('translateY(50px)');
+    setTimeout(() => transform.set('translateY(0)'), index * 200);
+    return transform;
+  };
+
+  constructor() {
+    setTimeout(() => {
+      this.containerOpacity.set(1);
+      this.titleOpacity.set(1);
+    }, 0);
+  }
 }
